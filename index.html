@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת שיבוץ מוקד</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
+        .shift-slot { @apply border p-2 rounded mb-1 text-sm transition-all duration-200; }
+        .slot-empty { @apply border-dashed border-2 border-slate-300 text-slate-400 cursor-pointer hover:bg-green-50 hover:border-green-400 hover:text-green-600; }
+        .slot-pending { @apply bg-orange-100 border-orange-300 text-orange-800 cursor-help; }
+        .slot-confirmed { @apply bg-blue-600 border-blue-700 text-white cursor-pointer shadow-sm; }
+        #modalOverlay { background: rgba(0,0,0,0.6); display: none; backdrop-filter: blur(2px); }
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <nav class="bg-white shadow-md p-4 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-black text-blue-700">שיבוץ מוקד</h1>
+                <div id="loadingStatus" class="text-xs text-gray-400">טוען נתונים...</div>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+                <button onclick="changeWeek(-7)" class="p-2 hover:bg-white rounded-md shadow-sm">◀</button>
+                <input type="date" id="datePicker" onchange="jumpToDate(this.value)" class="bg-transparent font-bold p-1 text-center outline-none">
+                <button onclick="changeWeek(7)" class="p-2 hover:bg-white rounded-md shadow-sm">▶</button>
+            </div>
+            <button onclick="toggleAdmin()" id="adminBtn" class="text-xs bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-full transition">כניסת מנהל</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div id="scheduleGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+            </div>
+    </div>
+
+    <div id="modalOverlay" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            <h3 id="modalTitle" class="text-xl font-extrabold mb-4 text-slate-800 border-b pb-2"></h3>
+            <div id="modalContent" class="space-y-4"></div>
+            <div class="mt-8 flex justify-end gap-3" id="modalActionsGroup">
+                <button onclick="closeModal()" class="px-5 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition">סגור</button>
+                <div id="modalActions"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrF1Uf1gUDdGaXLVEcmGda7bo2dqkLZUoMq_FBLbfBXMF7Lyn2XuH_TlxftGWbghjN/exec";
+        let isAdmin = false;
+        let currentStartDate = new Date();
+        let db = [];
+
+        const CONFIG = {
+            weekdays: [
+                { id: 'morning', name: "בוקר", time: "08:00-15:00", slots: 4 },
+                { id: 'evening', name: "ערב", time: "15:00-21:00", slots: 2 },
+                { id: 'night', name: "לילה", time: "21:00-08:00", slots: 1 }
+            ],
+            friday: [
+                { id: 'fri_morn', name: "שישי בוקר", time: "08:00-12:00", slots: 2 },
+                { id: 'sat_morn_a', name: "שבת בוקר (א)", time: "12:00-21:00", slots: 2 },
+                { id: 'sat_night_a', name: "שבת לילה (א)", time: "21:00-09:00", slots: 2 }
+            ],
+            saturday: [
+                { id: 'sat_morn_b', name: "שבת בוקר (ב)", time: "09:00-14:30", slots: 2 },
+                { id: 'sat_night_b', name: "שבת לילה (ב)", time: "14:30-21:00", slots: 2 }
+            ]
+        };
+
+        async function loadData() {
+            document.getElementById('loadingStatus').innerText = "מעדכן נתונים...";
+            try {
+                const response = await fetch(SCRIPT_URL);
+                db = await response.json();
+                document.getElementById('loadingStatus').innerText = "מחובר לשרת";
+                render();
+            } catch (e) {
+                document.getElementById('loadingStatus').innerText = "שגיאה בחיבור";
+            }
+        }
+
+        function render() {
+            const grid = document.getElementById('scheduleGrid');
+            grid.innerHTML = '';
+            let start = new Date(currentStartDate);
+            start.setDate(currentStartDate.getDate() - currentStartDate.getDay());
+            document.getElementById('datePicker').value = start.toISOString().split('T')[0];
+
+            for (let i = 0; i < 7; i++) {
+                let day = new Date(start);
+                day.setDate(start.getDate() + i);
+                let dayStr = day.toLocaleDateString('en-CA'); // YYYY-MM-DD format for DB consistency
+                
+                let shifts = CONFIG.weekdays;
+                if(i === 5) shifts = CONFIG.friday;
+                if(i === 6) shifts = CONFIG.saturday;
+
+                let dayHtml = `<div class="flex flex-col gap-2">
+                    <div class="text-center p-3 bg-white rounded-xl border shadow-sm ${i === 6 ? 'bg-blue-50 border-blue-200' : ''}">
+                        <div class="font-extrabold text-slate-700">${day.toLocaleDateString('he-IL', {weekday: 'long'})}</div>
+                        <div class="text-xs text-slate-400">${day.toLocaleDateString('he-IL')}</div>
+                    </div>`;
+
+                shifts.forEach(s => {
+                    dayHtml += `<div class="bg-white p-2 border rounded-xl shadow-sm">
+                        <div class="text-[10px] font-bold text-blue-500 mb-2 uppercase text-center bg-blue-50 rounded">${s.name} | ${s.time}</div>`;
+                    
+                    for(let j=0; j<s.slots; j++) {
+                        const booking = db.find(b => b.date === dayStr && b.shiftId === s.id && b.slotIdx == j);
+                        if(!booking) {
+                            dayHtml += `<div onclick="openRequest('${dayStr}', '${s.id}', ${j}, '${s.name}')" class="shift-slot slot-empty">+ פנוי</div>`;
+                        } else {
+                            const statusClass = booking.confirmed ? 'slot-confirmed' : 'slot-pending';
+                            const label = (booking.confirmed ? '' : '⏳ ') + booking.name;
+                            dayHtml += `<div onclick="viewBooking('${dayStr}', '${s.id}', ${j})" class="shift-slot ${statusClass}">${label}</div>`;
+                        }
+                    }
+                    dayHtml += `</div>`;
+                });
+                dayHtml += `</div>`;
+                grid.innerHTML += dayHtml;
+            }
+        }
+
+        function openRequest(date, shiftId, slotIdx, shiftName) {
+            document.getElementById('modalTitle').innerText = `בקשה למשמרת: ${shiftName}`;
+            document.getElementById('modalContent').innerHTML = `
+                <input id="regName" type="text" placeholder="שם מלא" class="w-full p-3 border rounded-lg outline-none focus:ring-2 ring-blue-500">
+                <input id="regPhone" type="tel" placeholder="מספר טלפון" class="w-full p-3 border rounded-lg outline-none focus:ring-2 ring-blue-500">
+                <textarea id="regNote" placeholder="הערות למנהל..." class="w-full p-3 border rounded-lg h-24 outline-none focus:ring-2 ring-blue-500"></textarea>
+            `;
+            document.getElementById('modalActions').innerHTML = `
+                <button id="submitBtn" onclick="submitRequest('${date}', '${shiftId}', ${slotIdx})" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:bg-blue-700 transition">שלח בקשה</button>
+            `;
+            showModal();
+        }
+
+        async function submitRequest(date, shiftId, slotIdx) {
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const note = document.getElementById('regNote').value;
+            if(!name || !phone) return alert("חובה למלא שם וטלפון");
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "שולח...";
+
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "add", date, shiftId, slotIdx, name, phone, note })
+            });
+
+            closeModal();
+            loadData();
+        }
+
+        function viewBooking(date, shiftId, slotIdx) {
+            const b = db.find(x => x.date === date && x.shiftId === shiftId && x.slotIdx == slotIdx);
+            document.getElementById('modalTitle').innerText = b.name;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="bg-slate-50 p-4 rounded-lg space-y-3">
+                    <p class="flex justify-between"><strong>טלפון:</strong> <a href="tel:${b.phone}" class="text-blue-600 font-bold underline">${b.phone}</a></p>
+                    <p class="flex flex-col"><strong>הערה:</strong> <span class="text-slate-600 italic">${b.note || 'אין הערות'}</span></p>
+                    <p class="text-sm border-t pt-2">סטטוס: ${b.confirmed ? '<span class="text-green-600 font-bold">✅ מאושר</span>' : '<span class="text-orange-600 font-bold">⏳ ממתין לאישור</span>'}</p>
+                </div>
+            `;
+            
+            let actions = '';
+            if(isAdmin) {
+                if(!b.confirmed) {
+                    actions += `<button onclick="adminAction('confirm', '${date}', '${shiftId}', ${slotIdx})" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold ml-2">אשר שיבוץ</button>`;
+                }
+            }
+            document.getElementById('modalActions').innerHTML = actions;
+            showModal();
+        }
+
+        async function adminAction(action, date, shiftId, slotIdx) {
+            document.getElementById('modalActions').innerHTML = "מעבד...";
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action, date, shiftId, slotIdx })
+            });
+            closeModal();
+            loadData();
+        }
+
+        function toggleAdmin() {
+            if(isAdmin) { isAdmin = false; document.getElementById('adminBtn').innerText = "כניסת מנהל"; }
+            else {
+                const pass = prompt("הכנס סיסמת מנהל:");
+                if(pass === "1234") {
+                    isAdmin = true;
+                    document.getElementById('adminBtn').innerText = "מחובר כמנהל (צא)";
+                }
+            }
+            render();
+        }
+
+        function showModal() { document.getElementById('modalOverlay').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function changeWeek(days) { currentStartDate.setDate(currentStartDate.getDate() + days); render(); }
+        function jumpToDate(val) { currentStartDate = new Date(val); render(); }
+
+        loadData();
+    </script>
+</body>
+</html>
