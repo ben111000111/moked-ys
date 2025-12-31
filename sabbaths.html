@@ -6,67 +6,53 @@
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .list-view { display: flex; flex-direction: column; gap: 1rem; }
-    </style>
 </head>
 <body class="bg-slate-50 font-['Assistant'] pb-20">
     <script>if(localStorage.getItem('user_auth') !== 'true') window.location.replace('login.html');</script>
 
-    <header class="bg-white border-b-2 border-slate-200 p-4 sticky top-0 z-50 flex justify-between items-center text-right shadow-sm">
+    <header class="bg-white border-b-2 border-slate-200 p-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-4">
-            <img src="logo.png" class="h-12">
+            <img src="logo.png" class="h-12" onerror="this.src='https://via.placeholder.com/50?text=Logo'">
             <h1 class="text-xl font-black text-slate-800">שבתות קרובות</h1>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="toggleView()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all text-slate-600" title="החלף תצוגה">
-                <svg id="viewIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-            </button>
-            <a href="index.html" class="p-2 bg-blue-100 rounded-xl text-blue-600 hover:bg-blue-200 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-            </a>
+        <div class="flex gap-2">
+            <button onclick="toggleView()" class="p-2 bg-slate-100 rounded-xl text-slate-600"><svg id="viewIcon" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+            <a href="index.html" class="p-2 bg-blue-100 rounded-xl text-blue-600">🏠</a>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto p-6 text-right">
-        <div class="mb-8 relative max-w-lg mx-auto">
-            <input type="text" id="searchInput" onkeyup="filterSabbaths()" placeholder="חפש פרשה או שם מוקדן..." class="w-full p-4 pr-12 rounded-2xl border-2 border-slate-200 focus:border-blue-500 outline-none shadow-sm font-bold transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute right-4 top-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-        </div>
-
-        <div id="sabbathContainer" class="list-view">
-            <div class="text-center py-10 opacity-30 font-bold">טוען רשימת שבתות...</div>
+        <input type="text" id="searchInput" onkeyup="filterSabbaths()" placeholder="חפש פרשה או שם..." class="w-full p-4 mb-8 rounded-2xl border-2 outline-none focus:border-blue-500 font-bold shadow-sm">
+        <div id="sabbathContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="col-span-full text-center py-20 font-bold opacity-30 animate-pulse text-xl">טוען נתונים מהגליון...</div>
         </div>
     </main>
 
     <div id="quickModal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border-2 border-blue-100 text-right animate-in fade-in zoom-in duration-200">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl text-right">
             <h3 id="quickParasha" class="text-2xl font-black text-slate-800 mb-4 border-b pb-2 italic"></h3>
-            <div id="quickContent" class="space-y-4"></div>
-            <button onclick="closeQuick()" class="mt-6 w-full py-3 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-all uppercase text-xs tracking-widest">סגור</button>
+            <div id="quickContent" class="space-y-4 text-lg"></div>
+            <button onclick="closeQuick()" class="mt-6 w-full py-3 bg-blue-600 text-white font-black rounded-xl">סגור</button>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        let allSabbaths = [];
         let db = [];
-        let isGridView = false;
+        let isGridView = true;
 
         async function init() {
+            const container = document.getElementById('sabbathContainer');
             try {
                 const res = await fetch(CONFIG.SCRIPT_URL);
+                if (!res.ok) throw new Error();
                 db = await res.json();
-                await renderSabbaths();
-            } catch(e) { console.error(e); }
+                renderSabbaths();
+            } catch(e) {
+                container.innerHTML = `<div class="col-span-full text-center p-10 bg-red-50 text-red-600 rounded-2xl font-bold border border-red-100">
+                    שגיאה בחיבור לגוגל שיטס. וודא שהקישור ב-config.js מעודכן ושביצעת Deploy ל-Anyone.
+                </div>`;
+            }
         }
 
         async function renderSabbaths() {
@@ -76,102 +62,44 @@
             sat.setDate(sat.getDate() + (6 - sat.getDay()));
 
             for(let i=0; i<12; i++) {
-                let d = new Date(sat); 
-                d.setDate(sat.getDate() + (i*7));
+                let d = new Date(sat); d.setDate(sat.getDate() + (i*7));
                 let dKey = d.toISOString().split('T')[0];
-                
-                const hRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${d.getFullYear()}&gm=${d.getMonth()+1}&gd=${d.getDate()}&g2h=1`);
-                const hData = await hRes.json();
-
-                let pName = "השבוע";
-                try {
-                    const pRes = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&year=${d.getFullYear()}&month=${d.getMonth()+1}`);
-                    const pData = await pRes.json();
-                    const item = pData.items.find(it => it.category === "parashat" && it.date === dKey);
-                    pName = item ? item.hebrew : "השבוע";
-                } catch(e) {}
-
-                // מציאת משובצים לשבת הזו (בוקר ולילה - מניח שהתאריך בשיטס הוא של יום שישי עבור שבת)
-                // כאן יש להתאים את הלוגיקה לתאריכים שלכם
                 let friKey = new Date(d); friKey.setDate(d.getDate() - 1);
                 let friKeyStr = friKey.toISOString().split('T')[0];
-                let workers = db.filter(x => x.תאריך === friKeyStr && (x.סוג_משמרת === 'sat_morn' || x.סוג_משמרת === 'sat_night'));
+
+                // ניסיון למצוא פרשה מה-API של Hebcal
+                const hRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${d.getFullYear()}&gm=${d.getMonth()+1}&gd=${d.getDate()}&g2h=1`);
+                const hData = await hRes.json();
                 
-                const sabbathObj = { dKey, pName, hebrew: hData.hebrew, dateStr: d.toLocaleDateString('he-IL'), workers };
-                allSabbaths.push(sabbathObj);
-                appendSabbathToDOM(sabbathObj);
+                // יצירת הכרטיס
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm hover:border-blue-500 transition-all cursor-pointer";
+                card.innerHTML = `
+                    <div onclick="window.location.href='index.html?jump=${dKey}'">
+                        <div class="text-xl font-black text-slate-800">שבת ${hData.hebrew.split(' ').pop()}</div>
+                        <div class="text-blue-600 font-bold text-sm mb-4">${hData.hebrew}</div>
+                    </div>
+                    <button onclick="showQuick('${hData.hebrew}', '${friKeyStr}')" class="w-full py-2 bg-slate-50 text-blue-600 rounded-xl font-bold text-sm border hover:bg-blue-600 hover:text-white transition-all">מי משובץ? 👀</button>
+                `;
+                container.appendChild(card);
             }
         }
 
-        function appendSabbathToDOM(s) {
-            const container = document.getElementById('sabbathContainer');
-            const card = document.createElement('div');
-            card.className = "sabbath-item bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group mb-2";
-            card.setAttribute('data-search', `${s.pName} ${s.workers.map(w => w.שם_מוקדן).join(' ')}`);
-            
-            card.innerHTML = `
-                <div class="flex-1" onclick="window.location.href='index.html?jump=${s.dKey}'">
-                    <div class="text-2xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">שבת פרשת ${s.pName}</div>
-                    <div class="text-blue-600 font-bold">${s.hebrew} | <span class="text-slate-400 font-medium text-sm">${s.dateStr}</span></div>
-                </div>
-                <div class="flex gap-2 mt-4 md:mt-0">
-                    <button onclick="event.stopPropagation(); showQuick('${s.pName}', '${s.dKey}')" class="px-4 py-2 bg-slate-50 text-blue-600 rounded-xl font-bold text-sm border hover:bg-blue-600 hover:text-white transition-all">הצצה מהירה 👀</button>
-                    <div class="bg-slate-50 p-3 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </div>
-                </div>
+        function showQuick(hebrew, friDate) {
+            document.getElementById('quickParasha').innerText = hebrew;
+            const morn = db.filter(x => x.תאריך === friDate && x.סוג_משמרת === 'sat_morn');
+            const night = db.filter(x => x.תאריך === friDate && x.סוג_משמרת === 'sat_night');
+
+            document.getElementById('quickContent').innerHTML = `
+                <div><b class="text-blue-600 block text-sm mb-1">בוקר:</b> ${morn.length ? morn.map(w => w.שם_מוקדן).join(', ') : 'טרם שובץ'}</div>
+                <div class="mt-4"><b class="text-blue-600 block text-sm mb-1">לילה:</b> ${night.length ? night.map(w => w.שם_מוקדן).join(', ') : 'טרם שובץ'}</div>
             `;
-            container.appendChild(card);
-        }
-
-        function filterSabbaths() {
-            const val = document.getElementById('searchInput').value.toLowerCase();
-            document.querySelectorAll('.sabbath-item').forEach(item => {
-                const searchData = item.getAttribute('data-search').toLowerCase();
-                item.style.display = searchData.includes(val) ? (isGridView ? 'block' : 'flex') : 'none';
-            });
-        }
-
-        function toggleView() {
-            const container = document.getElementById('sabbathContainer');
-            isGridView = !isGridView;
-            container.className = isGridView ? "grid-view" : "list-view";
-            
-            // עדכון אייקון
-            document.getElementById('viewIcon').innerHTML = isGridView ? 
-                `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />` : 
-                `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`;
-            
-            filterSabbaths();
-        }
-
-        function showQuick(parasha, dateKey) {
-            document.getElementById('quickParasha').innerText = "פרשת " + parasha;
-            let fri = new Date(dateKey); fri.setDate(fri.getDate() - 1);
-            let friStr = fri.toISOString().split('T')[0];
-            
-            // סינון המשובצים מה-DB
-            const morn = db.filter(x => x.תאריך === friStr && x.סוג_משמרת === 'sat_morn');
-            const night = db.filter(x => x.תאריך === friStr && x.סוג_משמרת === 'sat_night');
-
-            let html = `
-                <div class="space-y-2">
-                    <div class="font-black text-blue-600 text-xs uppercase">שבת בוקר:</div>
-                    ${morn.length ? morn.map(w => `<div class="bg-slate-50 p-2 rounded-lg font-bold">${w.שם_מוקדן}</div>`).join('') : '<div class="text-slate-300 italic">טרם שובצו</div>'}
-                </div>
-                <div class="space-y-2 mt-4">
-                    <div class="font-black text-blue-600 text-xs uppercase">שבת לילה:</div>
-                    ${night.length ? night.map(w => `<div class="bg-slate-50 p-2 rounded-lg font-bold">${w.שם_מוקדן}</div>`).join('') : '<div class="text-slate-300 italic">טרם שובצו</div>'}
-                </div>
-            `;
-            document.getElementById('quickContent').innerHTML = html;
             document.getElementById('quickModal').classList.remove('hidden');
         }
 
         function closeQuick() { document.getElementById('quickModal').classList.add('hidden'); }
-
+        function toggleView() { isGridView = !isGridView; document.getElementById('sabbathContainer').className = isGridView ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-4"; }
+        
         init();
     </script>
 </body>
