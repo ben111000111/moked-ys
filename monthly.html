@@ -1,0 +1,18 @@
+async function render() {
+    const grid = document.getElementById('mainGrid');
+    grid.className = "grid grid-cols-7 gap-2 bg-slate-200 p-2 rounded-2xl";
+    document.getElementById('periodTitle').innerText = anchor.toLocaleDateString('he-IL', {month:'long', year:'numeric'});
+    
+    let start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    start.setDate(start.getDate() - start.getDay());
+    
+    let html = "";
+    for(let i=0; i<35; i++) {
+        let d = new Date(start); d.setDate(start.getDate() + i);
+        let isToday = new Date().toDateString() === d.toDateString();
+        html += `<div class="card h-24 p-2 ${d.getMonth() !== anchor.getMonth() ? 'opacity-40' : ''} ${isToday ? 'bg-blue-50' : ''}">
+            <div class="font-bold text-xs">${d.getDate()}</div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+}
