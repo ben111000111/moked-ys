@@ -7,109 +7,133 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; }
-        .card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; }
-        .slot-btn { @apply w-full mb-1.5 py-2.5 rounded-xl font-bold text-[13px] border transition-all; }
-        .slot-free { @apply border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600; }
-        .slot-taken { @apply bg-blue-600 border-blue-700 text-white shadow-sm font-bold; }
-        .nav-link { @apply px-3 py-2 rounded-xl text-[11px] font-bold border border-slate-200 bg-white flex items-center gap-1; }
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .nav-link { @apply px-3 py-2 rounded-xl text-[12px] font-bold border border-slate-200 bg-white flex items-center gap-1 transition-all; }
         .nav-link-active { @apply bg-blue-600 text-white border-blue-600; }
+        .slot-btn { @apply w-full mb-1.5 py-2.5 rounded-xl font-bold text-[13px] border transition-all shadow-sm; }
+        .slot-free { @apply border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600; }
+        .slot-taken { @apply bg-blue-600 border-blue-700 text-white font-bold; }
     </style>
 </head>
 <body class="min-h-screen pb-20">
-    <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center text-right">
         <div class="flex items-center gap-4">
             <img src="logo.png" class="h-14">
-            <div><h1 class="text-xl font-black text-slate-800 leading-none">מוקד יד שרה</h1><p class="text-blue-600 font-bold text-xs mt-1">שיבוץ שבועי</p></div>
+            <div>
+                <h1 id="welcomeMsg" class="text-lg font-black text-slate-800 leading-none italic">שלום...</h1>
+                <p id="timeGreeting" class="text-blue-600 font-bold text-xs mt-1 uppercase"></p>
+            </div>
         </div>
-        <nav class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl">
-            <a href="index.html" class="nav-link nav-link-active"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></a>
-            <a href="daily.html" class="nav-link">יומי</a>
-            <a href="monthly.html" class="nav-link">חודשי</a>
+        <nav class="flex gap-2">
+            <a href="index.html" class="nav-link nav-link-active">בית</a>
             <a href="sabbaths.html" class="nav-link">שבתות</a>
+            <a href="profile.html" class="nav-link bg-blue-50 text-blue-700 border-blue-200">
+                👤 אזור אישי
+            </a>
         </nav>
     </header>
+
     <main class="max-w-7xl mx-auto p-4 md:p-8 text-right">
-        <div class="flex justify-between items-center mb-8">
-            <button onclick="changeWeek(-1)" class="w-12 h-12 bg-white border rounded-full shadow-sm">◀</button>
-            <div class="text-center"><h2 id="periodTitle" class="text-3xl font-black text-slate-800">טוען...</h2><div id="parashaBadge" class="mt-1 text-blue-600 font-bold text-lg"></div></div>
-            <button onclick="changeWeek(1)" class="w-12 h-12 bg-white border rounded-full shadow-sm">▶</button>
+        <div class="flex justify-between items-center mb-8 bg-white p-4 rounded-3xl border shadow-sm">
+            <button onclick="changeWeek(-1)" class="w-10 h-10 border rounded-full hover:bg-slate-50">◀</button>
+            <div class="text-center">
+                <h2 class="text-2xl font-black text-slate-800">שיבוץ שבועי</h2>
+                <div id="parashaBadge" class="text-blue-600 font-bold text-sm"></div>
+            </div>
+            <button onclick="changeWeek(1)" class="w-10 h-10 border rounded-full hover:bg-slate-50">▶</button>
         </div>
-        <div id="mainGrid" class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-6"></div>
-        <div id="weekendGrid"></div>
+        <div id="mainGrid" class="grid grid-cols-1 md:grid-cols-6 gap-3"></div>
     </main>
+
     <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 text-right">
-        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl relative border border-white">
-            <h3 class="text-2xl font-black text-slate-800 mb-2">בקשת רישום</h3>
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl border border-white">
+            <h3 class="text-2xl font-black mb-2">בקשת שיבוץ</h3>
             <div id="modalInfo" class="bg-blue-50 p-4 rounded-2xl mb-6 text-blue-800 font-bold text-sm"></div>
             <div class="space-y-4">
-                <input id="f-name" type="text" placeholder="שם מלא" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 font-bold">
-                <input id="f-phone" type="tel" placeholder="טלפון" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 font-bold">
+                <input id="f-name" type="text" placeholder="שם מלא" class="w-full p-3 rounded-xl border bg-slate-50 font-bold outline-none">
+                <input id="f-phone" type="tel" placeholder="טלפון" class="w-full p-3 rounded-xl border bg-slate-50 font-bold outline-none">
             </div>
-            <div class="mt-8 flex flex-col gap-3"><button id="submitBtn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-lg">שלח בקשה</button><button onclick="closeModal()" class="w-full py-2 text-slate-400 font-bold">ביטול</button></div>
+            <div class="mt-8 flex flex-col gap-3">
+                <button id="submitBtn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg">שלח בקשה</button>
+                <button onclick="closeModal()" class="w-full py-2 text-slate-400 font-bold">ביטול</button>
+            </div>
         </div>
     </div>
+
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsxblLid--zFr8ehMQcXnavcyiFlvaXA5s4yfqfADsyWJGYoQAR2u1GUfPafEw7pR/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxz7mg4b1xVkRI_4xVkCdfvt19YHuyUp3iIdW4Voh-1P5Se4DV2YbVLtp-EZkKVfTHR/exec";
         let db = [], anchor = new Date();
-        const PARASHOT = {"2026-01-03":"ויחי", "2026-01-10":"שמות", "2026-01-17":"וארא", "2026-01-24":"בא", "2026-01-31":"בשלח"};
-        if (!localStorage.getItem('user_auth')) { window.location.href = 'login.html'; }
-        async function load() { const r = await fetch(SCRIPT_URL); db = await r.json(); render(); }
-        async function render() {
+
+        if (!localStorage.getItem('user_auth')) window.location.href = 'login.html';
+
+        function updateGreeting() {
+            const profile = JSON.parse(localStorage.getItem('user_profile') || '{"name":"מוקדן"}');
+            const hour = new Date().getHours();
+            let greet = hour < 5 || hour >= 21 ? "לילה טוב" : hour < 12 ? "בוקר טוב" : hour < 17 ? "צהריים טובים" : "ערב טוב";
+            document.getElementById('welcomeMsg').innerText = `שלום, ${profile.name}`;
+            document.getElementById('timeGreeting').innerText = greet;
+        }
+
+        async function load() {
+            try {
+                const r = await fetch(SCRIPT_URL);
+                db = await r.json();
+                render();
+            } catch(e) { console.error("Error loading data", e); }
+        }
+
+        function render() {
             const grid = document.getElementById('mainGrid');
-            const weekend = document.getElementById('weekendGrid');
-            let start = new Date(anchor); start.setDate(anchor.getDate() - anchor.getDay());
+            let start = new Date(anchor); 
+            start.setDate(anchor.getDate() - anchor.getDay());
             let html = "";
-            const order = [6, 0, 1, 2, 3, 4];
-            const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','מוצ"ש'];
-            for(let i of order) {
-                let d = new Date(start); d.setDate(start.getDate() + (i === 6 ? -1 : i));
+            const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
+            
+            for(let i=0; i<6; i++) {
+                let d = new Date(start); d.setDate(start.getDate() + i);
                 let dKey = d.toISOString().split('T')[0];
-                const hRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${d.getFullYear()}&gm=${d.getMonth()+1}&gd=${d.getDate()}&g2h=1`);
-                const hData = await hRes.json();
-                html += `<div class="card p-3"><div class="text-center border-b pb-2 mb-3"><div class="font-black">${i === 6 ? 'מוצ"ש' : DAYS[i]}</div><div class="text-[10px] text-blue-600 font-bold">${hData.hebrew}</div></div>`;
-                if(i === 6) html += renderSlot(dKey, 'night', 'לילה', 'מוצ"ש לראשון', hData.hebrew);
-                else {
-                    html += renderSlot(dKey, 'morn', 'בוקר', '', hData.hebrew, i < 5);
-                    html += renderSlot(dKey, 'eve', 'ערב', '', hData.hebrew);
-                    html += renderSlot(dKey, 'night', 'לילה', `${DAYS[i]} לשני`, hData.hebrew);
-                }
+                html += `<div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-center border-b pb-2 mb-3">
+                        <div class="font-black text-slate-700">יום ${DAYS[i]}</div>
+                        <div class="text-[10px] text-blue-500">${d.toLocaleDateString('he-IL')}</div>
+                    </div>`;
+                html += renderSlot(dKey, 'morn', 'בוקר', i < 5);
+                html += renderSlot(dKey, 'eve', 'ערב');
+                html += renderSlot(dKey, 'night', 'לילה');
                 html += `</div>`;
             }
             grid.innerHTML = html;
-            let sat = new Date(start); sat.setDate(start.getDate() + 6);
-            let fri = new Date(start); fri.setDate(start.getDate() + 5);
-            document.getElementById('periodTitle').innerText = "שיבוץ שבועי";
-            document.getElementById('parashaBadge').innerText = "שבת פרשת " + (PARASHOT[sat.toISOString().split('T')[0]] || "השבוע");
-            weekend.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100 p-4 rounded-2xl border"><div class="card p-4 bg-white"><div class="font-black text-center border-b mb-3">שישי (בוקר)</div>${renderSlot(fri.toISOString().split('T')[0], 'fri_morn', 'בוקר', '', 'שישי', true)}</div><div class="card p-4 bg-white"><div class="font-black text-center border-b mb-3">שבת (בוקר/לילה)</div><div class="grid grid-cols-2 gap-2">${renderSlot(fri.toISOString().split('T')[0], 'sat_morn', 'שבת בוקר', '', 'שבת בוקר')}${renderSlot(fri.toISOString().split('T')[0], 'sat_night', 'שבת לילה', '', 'שבת לילה')}</div></div></div>`;
         }
-        function renderSlot(date, sid, sname, night, hStr, girls) {
+
+        function renderSlot(date, sid, sname, isGirls) {
+            const b = db.find(x => x.תאריך === date && x.סוג_משמרת === sid);
             let html = `<div class="mb-3"><div class="text-[9px] font-black text-slate-400 uppercase">${sname}</div>`;
-            if(night) html += `<div class="text-[9px] font-bold text-blue-500 mb-1 leading-none">${night}</div>`;
-            if(girls && sname === 'בוקר') html += `<div class="bg-pink-50 text-pink-400 text-[10px] py-1 text-center font-bold rounded-lg border">בנות</div>`;
-            else {
-                const b = db.find(x => x.תאריך === date && x.סוג_משמרת === sid);
-                if(!b) html += `<button onclick="openRequest('${date}','${sid}','${sname}','${hStr}')" class="slot-btn slot-free">+ בקש</button>`;
-                else html += `<button onclick="alert('טלפון: ' + '${b.טלפון}')" class="slot-btn slot-taken">${b.שם_מוקדן}</button>`;
-            }
+            if(isGirls && sid === 'morn') html += `<div class="bg-pink-50 text-pink-400 text-[10px] py-1 text-center font-bold rounded-lg border border-pink-100">בנות</div>`;
+            else if(b) html += `<button class="slot-btn slot-taken">${b.שם_מוקדן}</button>`;
+            else html += `<button onclick="openRequest('${date}','${sid}','${sname}')" class="slot-btn slot-free">+ בקש</button>`;
             return html + `</div>`;
         }
-        function openRequest(date, sid, sname, hStr) {
+
+        function openRequest(date, sid, sname) {
             const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             document.getElementById('f-name').value = profile.name || '';
             document.getElementById('f-phone').value = profile.phone || '';
-            document.getElementById('modalInfo').innerHTML = `${sname} | ${hStr} | ${date}`;
+            document.getElementById('modalInfo').innerText = `${sname} | ${date}`;
             document.getElementById('submitBtn').onclick = () => submit(date, sid);
             document.getElementById('modal').classList.remove('hidden');
         }
+
         async function submit(date, sid) {
             const n = document.getElementById('f-name').value, p = document.getElementById('f-phone').value;
-            await fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'add', date, shiftId:sid, name:n, phone:p})});
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'add', date, shiftId: sid, name: n, phone: p }) });
+            alert("הבקשה נשלחה בהצלחה!");
             location.reload();
         }
+
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function changeWeek(d) { anchor.setDate(anchor.getDate() + (7*d)); render(); }
-        load();
+        
+        updateGreeting(); load();
     </script>
 </body>
 </html>
