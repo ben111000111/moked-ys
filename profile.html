@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>אזור אישי | מוקד יד שרה</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; }</style>
+</head>
+<body class="pb-20">
+    <header class="bg-white border-b-2 border-slate-200 p-4 flex justify-between items-center">
+        <div class="flex items-center gap-4"><img src="logo.png" class="h-12"><h1 class="text-xl font-black">אזור אישי</h1></div>
+        <a href="index.html" class="p-3 bg-slate-100 rounded-full hover:bg-blue-100">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        </a>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 space-y-8">
+        <section class="bg-white p-6 rounded-3xl shadow-sm border">
+            <h2 class="text-xl font-black mb-4 border-b pb-2">עדכון פרטים אישיים</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input id="up-name" type="text" placeholder="שם מלא" class="p-3 rounded-xl border bg-slate-50 font-bold">
+                <input id="up-phone" type="tel" placeholder="טלפון" class="p-3 rounded-xl border bg-slate-50 font-bold">
+            </div>
+            <button onclick="updateDetails()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">שמור שינויים</button>
+        </section>
+
+        <section class="bg-white p-6 rounded-3xl shadow-sm border">
+            <h2 class="text-xl font-black mb-4 border-b pb-2">המשמרות שלי (מאושרות)</h2>
+            <div id="myShifts" class="space-y-3"><p class="text-slate-400">טוען נתונים...</p></div>
+        </section>
+
+        <section class="bg-white p-6 rounded-3xl shadow-sm border">
+            <h2 class="text-xl font-black mb-4 border-b pb-2">הערות למערכת / בקשות מיוחדות</h2>
+            <textarea id="sys-note" class="w-full p-4 rounded-xl border bg-slate-50 h-24 font-bold" placeholder="כתוב כאן כל מה שחשוב למנהל המוקד לדעת..."></textarea>
+            <button onclick="sendNote()" class="mt-4 px-6 py-2 bg-slate-800 text-white rounded-xl font-bold">שלח הערה</button>
+        </section>
+        
+        <button onclick="logout()" class="w-full py-3 text-red-500 font-bold border border-red-100 rounded-xl hover:bg-red-50">התנתק מהמערכת</button>
+    </main>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl text-white font-black shadow-2xl transition-all opacity-0 translate-y-10 pointer-events-none"></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvsxblLid--zFr8ehMQcXnavcyiFlvaXA5s4yfqfADsyWJGYoQAR2u1GUfPafEw7pR/exec";
+        
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.backgroundColor = isError ? '#ef4444' : '#10b981';
+            t.classList.remove('opacity-0', 'translate-y-10');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-10'), 3000);
+        }
+
+        async function loadProfile() {
+            const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+            document.getElementById('up-name').value = profile.name || '';
+            document.getElementById('up-phone').value = profile.phone || '';
+
+            // טעינת משמרות מהשיטס
+            const r = await fetch(SCRIPT_URL);
+            const db = await r.json();
+            const myShifts = db.filter(x => x.שם_מוקדן === profile.name);
+            
+            const container = document.getElementById('myShifts');
+            if(myShifts.length === 0) container.innerHTML = '<p class="text-slate-400">אין לך משמרות משובצות כרגע.</p>';
+            else {
+                container.innerHTML = myShifts.map(s => `
+                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl border border-blue-100 text-blue-800">
+                        <span class="font-bold">${s.סוג_משמרת} | ${s.תאריך}</span>
+                        <span class="text-xs font-black">מאושר ✅</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function updateDetails() {
+            const name = document.getElementById('up-name').value;
+            const phone = document.getElementById('up-phone').value;
+            localStorage.setItem('user_profile', JSON.stringify({name, phone}));
+            showToast("הפרטים עודכנו בהצלחה!");
+        }
+
+        async function sendNote() {
+            const note = document.getElementById('sys-note').value;
+            const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+            if(!note) return showToast("אנא כתוב הערה", true);
+            
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'add', note, name: profile.name, phone: profile.phone, date: 'הערת מערכת', shiftId: 'GENERAL' })
+                });
+                showToast("ההערה נשלחה למנהל המוקד");
+                document.getElementById('sys-note').value = "";
+            } catch(e) { showToast("שגיאה בשליחה", true); }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        loadProfile();
+    </script>
+</body>
+</html>
