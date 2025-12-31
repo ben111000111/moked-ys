@@ -1,8 +1,10 @@
 const CONFIG = {
     SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyBRu56yCh-x7EL-OQkEe_Lcb-En6Efj94e8yzKD1OlyHfaRDLId3dovUSt362l7qRK/exec",
-    LOGO_FILENAME: "logo.jpg", // וודא שזה שם הקובץ האיכותי שלך
-    SUPPORT_PHONE: "0539653809"
+    LOGO_FILENAME: "logo.jpg",
+    SUPPORT_PHONE: "0539653809",
+    SUPPORT_WA: "972539653809"
 };
+// כאן נשאר המאגר הגדול של הפרשות (PARASHOT_DB)
 
 const PARASHOT_DB = {
     // 2025
