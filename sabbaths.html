@@ -5,24 +5,58 @@
     <title>שבתות קדימה | מוקד מצוקה יד שרה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .list-view { display: flex; flex-direction: column; gap: 1rem; }
+    </style>
 </head>
-<body class="bg-slate-50 font-['Assistant'] pb-20 text-right">
-    <header class="bg-white border-b-2 p-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
+<body class="bg-slate-50 font-['Assistant'] pb-20">
+    <header class="bg-white border-b-2 border-slate-200 p-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-4">
             <img id="headerLogo" class="h-10">
             <h1 class="text-xl font-black text-slate-800 italic">שבתות וחגים קרובים</h1>
         </div>
-        <a href="index.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm">חזרה</a>
+        <div class="flex gap-2">
+            <button onclick="toggleView()" class="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-all">
+                <svg id="viewIcon" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <a href="index.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm">חזרה</a>
+        </div>
     </header>
 
-    <main class="max-w-4xl mx-auto p-6 space-y-4" id="sabbathList"></main>
+    <main class="max-w-6xl mx-auto p-6 text-right">
+        <input type="text" id="searchInput" onkeyup="filterSabbaths()" placeholder="חפש פרשה או מוקדן..." class="w-full p-4 mb-8 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold shadow-sm transition-all">
+
+        <div id="sabbathContainer" class="list-view">
+            </div>
+    </main>
+
+    <div id="quickModal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-right">
+            <h3 id="quickTitle" class="text-2xl font-black text-slate-800 mb-4 border-b pb-2 italic"></h3>
+            <div id="quickContent" class="space-y-4 text-lg"></div>
+            <button onclick="closeQuick()" class="mt-8 w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg">סגור</button>
+        </div>
+    </div>
 
     <script src="config.js"></script>
     <script>
-        document.getElementById('headerLogo').src = CONFIG.LOGO_FILENAME;
+        let db = [];
+        let isGridView = false;
 
-        function render() {
-            const list = document.getElementById('sabbathList');
+        async function init() {
+            document.getElementById('headerLogo').src = CONFIG.LOGO_FILENAME;
+            try {
+                const res = await fetch(CONFIG.SCRIPT_URL);
+                db = await res.json();
+                renderSabbaths();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderSabbaths() {
+            const container = document.getElementById('sabbathContainer');
+            container.innerHTML = "";
             let curr = new Date();
             curr.setDate(curr.getDate() + (6 - curr.getDay()));
 
@@ -35,19 +69,57 @@
                 const isHoliday = name.includes("ערב") || name.includes("חוה\"מ") || name.includes("פסח") || name.includes("סוכות");
                 const title = isHoliday ? name : `פרשת ${name}`;
 
+                // חיפוש משובצים לצורך החיפוש החופשי
+                let friKey = new Date(d); friKey.setDate(d.getDate() - 1);
+                let friStr = friKey.toISOString().split('T')[0];
+                let workers = db.filter(x => x.תאריך === friStr).map(x => x.שם_מוקדן).join(' ');
+
                 const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center";
+                card.className = "sabbath-card bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-blue-500 transition-all cursor-pointer group";
+                card.setAttribute('data-search', `${title} ${workers}`);
+                
                 card.innerHTML = `
-                    <div>
-                        <div class="text-lg font-black text-slate-800 leading-tight">${title}</div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase">${d.toLocaleDateString('he-IL')}</div>
+                    <div onclick="window.location.href='index.html?date=${key}'" class="flex-1">
+                        <div class="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">שבת ${title}</div>
+                        <div class="text-sm text-blue-500 font-bold">${d.toLocaleDateString('he-IL')}</div>
                     </div>
-                    <button onclick="window.location.href='index.html?date=${key}'" class="text-blue-600 bg-blue-50 px-4 py-2 rounded-xl text-xs font-black">צפה בשבוע</button>
+                    <div class="flex gap-2 mt-4 md:mt-0">
+                        <button onclick="event.stopPropagation(); showQuick('${title}', '${friStr}')" class="px-5 py-2 bg-slate-50 text-blue-600 rounded-xl font-bold text-xs border border-slate-100 hover:bg-blue-600 hover:text-white transition-all">מי משובץ? 👀</button>
+                        <div class="bg-blue-50 text-blue-600 p-2 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-all">🏠</div>
+                    </div>
                 `;
-                list.appendChild(card);
+                container.appendChild(card);
             }
         }
-        render();
+
+        function showQuick(title, friDate) {
+            document.getElementById('quickTitle').innerText = title;
+            const morn = db.filter(x => x.תאריך === friDate && x.סוג_משמרת.includes('morn'));
+            const night = db.filter(x => x.תאריך === friDate && x.סוג_משמרת.includes('night'));
+
+            document.getElementById('quickContent').innerHTML = `
+                <div><span class="text-blue-600 font-black block text-xs uppercase mb-1">שבת בוקר:</span> ${morn.length ? morn.map(w => `<div class="bg-slate-50 p-2 rounded-lg font-bold mt-1">${w.שם_מוקדן}</div>`).join('') : 'טרם שובץ'}</div>
+                <div class="mt-4"><span class="text-blue-600 font-black block text-xs uppercase mb-1">שבת לילה:</span> ${night.length ? night.map(w => `<div class="bg-slate-50 p-2 rounded-lg font-bold mt-1">${w.שם_מוקדן}</div>`).join('') : 'טרם שובץ'}</div>
+            `;
+            document.getElementById('quickModal').classList.remove('hidden');
+        }
+
+        function filterSabbaths() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.sabbath-card').forEach(c => {
+                c.style.display = c.getAttribute('data-search').toLowerCase().includes(val) ? (isGridView ? 'block' : 'flex') : 'none';
+            });
+        }
+
+        function toggleView() {
+            isGridView = !isGridView;
+            const container = document.getElementById('sabbathContainer');
+            container.className = isGridView ? "grid-view" : "list-view";
+            filterSabbaths();
+        }
+
+        function closeQuick() { document.getElementById('quickModal').classList.add('hidden'); }
+        init();
     </script>
 </body>
 </html>
