@@ -2,130 +2,53 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>כניסה | מוקד המוקד</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <title>כניסה | מוקד מצוקה יד שרה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-50 font-['Assistant'] flex items-center justify-center min-h-screen p-4 text-right">
-    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-200 relative overflow-hidden">
-        
-        <div class="absolute top-6 left-6 flex items-center gap-2">
-            <span id="statusLabel" class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">בדיקת שרת</span>
-            <div id="statusLight" class="w-2.5 h-2.5 rounded-full bg-slate-300 animate-pulse"></div>
-        </div>
-
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-200 relative">
         <div class="text-center mb-8">
-            <img id="loginLogo" class="h-24 mx-auto mb-4 object-contain" alt="לוגו המוקד">
-            <h1 id="authTitle" class="text-2xl font-black text-slate-800 leading-tight">כניסה למערכת</h1>
-            <div id="loginParasha" class="text-blue-600 font-bold text-xs mt-1 opacity-70 italic">טוען נתונים...</div>
+            <img id="loginLogo" class="h-24 mx-auto mb-4 object-contain" alt="לוגו">
+            <h1 class="text-2xl font-black text-slate-800 leading-tight italic">כניסה למערכת</h1>
+            <div id="dynamicGreeting" class="text-blue-600 font-bold text-lg mt-1 italic tracking-tighter">טוען...</div>
         </div>
-        
-        <div id="errorMessage" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-2xl text-sm font-bold text-center border border-red-200"></div>
-
         <form id="authForm" class="space-y-4">
-            <div id="registerFields" class="hidden space-y-4">
-                <input type="tel" id="regPhone" placeholder="מספר טלפון" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right transition-all">
-                <input type="email" id="email" placeholder="אימייל" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right transition-all">
-            </div>
-            <input type="text" id="username" placeholder="שם משתמש" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right transition-all shadow-sm" required>
-            <input type="password" id="password" placeholder="סיסמה" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right transition-all shadow-sm" required>
-            
-            <button type="submit" id="submitBtn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-lg hover:bg-blue-700 active:scale-95 transition-all">התחברות</button>
+            <input type="text" id="username" placeholder="שם משתמש" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right" required>
+            <input type="password" id="password" placeholder="סיסמה" class="w-full p-4 rounded-2xl border font-bold bg-slate-50 outline-none focus:ring-2 ring-blue-500 text-right" required>
+            <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-lg">התחברות</button>
         </form>
-        
-        <button onclick="toggleAuth()" id="toggleBtn" class="w-full mt-6 text-slate-400 font-bold text-xs hover:text-blue-600 transition-colors underline decoration-dotted">אין לך חשבון? הירשם כאן</button>
-
-        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-            <p class="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-widest">תמיכה טכנית</p>
-            <div class="flex justify-center gap-6">
-                <a href="tel:0539653809" class="flex items-center gap-1.5 text-blue-600 font-black text-sm hover:scale-105 transition-transform">
-                    <span>📞</span> שיחה
-                </a>
-                <a href="https://wa.me/972539653809" target="_blank" class="flex items-center gap-1.5 text-green-600 font-black text-sm hover:scale-105 transition-transform">
-                    <span>💬</span> וואטסאפ
-                </a>
-            </div>
-        </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        let isRegister = false;
-
-        // עדכון לוגו מה-Config
         document.getElementById('loginLogo').src = CONFIG.LOGO_FILENAME || 'logo.png';
+        
+        function setGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            const day = now.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+            let greeting = "";
 
-        // בדיקת חיבור וטעינת פרשה
-        async function initAuthPage() {
-            const light = document.getElementById('statusLight');
-            const label = document.getElementById('statusLabel');
-            const parashaDiv = document.getElementById('loginParasha');
-            
-            try {
-                // בדיקת שרת
-                const res = await fetch(CONFIG.SCRIPT_URL);
-                if(res.ok || res.type === 'opaque') {
-                    light.classList.replace('bg-slate-300', 'bg-green-500');
-                    light.classList.remove('animate-pulse');
-                    label.innerText = "שרת מחובר";
-                    label.classList.replace('text-slate-400', 'text-green-600');
-                }
+            if (day === 5 && hour >= 14) greeting = "ערב שבת שלום";
+            else if (day === 6 && hour < 19) greeting = "שבת שלום";
+            else if (day === 6 && hour >= 19) greeting = "שבוע טוב";
+            else if (day === 0 && hour < 10) greeting = "שבוע טוב ובוקר טוב";
+            else if (hour >= 5 && hour < 12) greeting = "בוקר טוב";
+            else if (hour >= 12 && hour < 17) greeting = "צהריים טובים";
+            else if (hour >= 17 && hour < 21) greeting = "ערב טוב";
+            else greeting = "לילה טוב";
 
-                // טעינת פרשה נוכחית
-                const now = new Date();
-                let sat = new Date(now);
-                sat.setDate(now.getDate() + (6 - now.getDay()));
-                const satKey = sat.toISOString().split('T')[0];
-                
-                const hebRes = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&year=${sat.getFullYear()}&month=${sat.getMonth()+1}`);
-                const hebData = await hebRes.json();
-                const parasha = hebData.items.find(i => i.category === "parashat" && i.date === satKey);
-                
-                parashaDiv.innerText = parasha ? `שבת פרשת ${parasha.hebrew}` : "שבת שלום";
-            } catch (e) {
-                light.classList.replace('bg-slate-300', 'bg-red-500');
-                label.innerText = "שגיאת שרת";
-                parashaDiv.innerText = "מוקד המוקד";
-            }
+            document.getElementById('dynamicGreeting').innerText = greeting;
         }
 
-        function toggleAuth() {
-            isRegister = !isRegister;
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('authTitle').innerText = isRegister ? 'רישום מוקדן חדש' : 'כניסה למערכת';
-            document.getElementById('registerFields').classList.toggle('hidden');
-            document.getElementById('submitBtn').innerText = isRegister ? 'בצע רישום' : 'התחברות';
-            document.getElementById('toggleBtn').innerText = isRegister ? 'כבר רשום? התחבר כאן' : 'אין לך חשבון? הירשם כאן';
-        }
-
-        document.getElementById('authForm').onsubmit = async (e) => {
+        document.getElementById('authForm').onsubmit = (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "מעבד...";
-
-            const payload = {
-                action: isRegister ? 'register' : 'login',
-                name: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                phone: document.getElementById('regPhone').value,
-                email: document.getElementById('email').value
-            };
-
-            try {
-                await fetch(CONFIG.SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                localStorage.setItem('user_profile', JSON.stringify({ name: payload.name, phone: payload.phone }));
-                localStorage.setItem('user_auth', 'true');
-                window.location.href = 'index.html';
-            } catch (err) {
-                document.getElementById('errorMessage').innerText = "שגיאה בתקשורת עם השרת";
-                document.getElementById('errorMessage').classList.remove('hidden');
-                btn.disabled = false;
-                btn.innerText = "נסה שנית";
-            }
+            localStorage.setItem('user_auth', 'true');
+            localStorage.setItem('user_profile', JSON.stringify({ name: document.getElementById('username').value }));
+            window.location.href = 'index.html';
         };
-
-        initAuthPage();
+        setGreeting();
     </script>
 </body>
 </html>
