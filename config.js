@@ -1,5 +1,5 @@
 const CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzjmRHwFV-HLZPaRdRqkHCWuCaoVeQRk-N_xz7Xt9xSzYmfv_hzxAZGYTuaJErW84Ib/exec",
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyNm-CGS6eqbRtPZ6D9A4LEJtP0wxy2tDF0JgqjvrOItl69p6unXckBAQ4too2d81W1/exec",
     LOGO_FILENAME: "logo.png",
     SUPPORT_PHONE: "0539653809",
     ADMIN_PASSWORD: "9987"
