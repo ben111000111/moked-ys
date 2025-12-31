@@ -2,92 +2,33 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>אזור אישי | מוקד מצוקה יד שרה</title>
+    <title>פרופיל | מוקד מצוקה יד שרה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; } * { font-style: normal !important; }</style>
 </head>
-<body class="bg-slate-50 font-['Assistant'] pb-20 text-right">
-    <header class="bg-white border-b-2 p-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
-        <h1 class="text-xl font-black text-slate-800 italic">פרופיל מוקדן</h1>
-        <nav class="flex gap-2">
-            <a href="index.html" class="px-3 py-2 bg-white border rounded-xl font-bold text-xs">בית</a>
-            <button onclick="localStorage.clear(); window.location.replace('login.html');" class="px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold text-xs">התנתק</button>
-        </nav>
+<body class="bg-slate-50 text-right pb-20">
+    <header class="bg-white border-b-2 p-4 sticky top-0 flex justify-between items-center shadow-sm">
+        <h1 class="text-xl font-black text-slate-800">פרופיל מוקדן</h1>
+        <a href="index.html" class="px-3 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">חזרה</a>
     </header>
-
-    <main class="max-w-4xl mx-auto p-6 space-y-6 text-right">
+    <main class="max-w-4xl mx-auto p-6 space-y-6">
         <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm flex items-center gap-6">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-black" id="userInitial"></div>
-            <div>
-                <h2 id="userName" class="text-2xl font-black text-slate-800 leading-none"></h2>
-                <p class="text-blue-600 font-bold text-sm italic mt-1 uppercase tracking-tighter">מוקדן מצטיין</p>
-            </div>
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-black" id="initial"></div>
+            <div><h2 id="name" class="text-2xl font-black text-slate-800"></h2><p class="text-blue-600 font-bold text-sm uppercase">מוקד מצטיין</p></div>
         </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-3xl border text-center">
-                <div class="text-[10px] font-black text-slate-400 uppercase">משמרות</div>
-                <div id="statTotal" class="text-3xl font-black text-slate-800">0</div>
-            </div>
-            <div class="bg-white p-5 rounded-3xl border text-center">
-                <div class="text-[10px] font-black text-slate-400 uppercase">בוקר</div>
-                <div id="statMorn" class="text-3xl font-black text-emerald-600">0</div>
-            </div>
-            <div class="bg-white p-5 rounded-3xl border text-center">
-                <div class="text-[10px] font-black text-slate-400 uppercase">ערב</div>
-                <div id="statEve" class="text-3xl font-black text-blue-600">0</div>
-            </div>
-            <div class="bg-white p-5 rounded-3xl border text-center">
-                <div class="text-[10px] font-black text-slate-400 uppercase">לילה</div>
-                <div id="statNight" class="text-3xl font-black text-indigo-600">0</div>
-            </div>
-        </div>
-
-        <div class="bg-gradient-to-l from-blue-600 to-blue-800 p-8 rounded-[2.5rem] text-white shadow-xl">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-lg font-black italic">הדירוג שלך</h3>
-                    <div id="userRank" class="text-5xl font-black mt-2">#1</div>
-                </div>
-                <div class="text-right opacity-80 text-xs font-bold uppercase tracking-widest leading-relaxed">
-                    מבוסס על<br>פעילות חודשית
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-[2.5rem] border shadow-sm text-center">
-            <h3 class="font-black text-slate-800 mb-4 italic">תמיכה טכנית</h3>
+        <div class="bg-white p-6 rounded-[2.5rem] border text-center">
+            <h3 class="font-black text-slate-800 mb-4">תמיכה טכנית</h3>
             <div class="grid grid-cols-2 gap-4">
-                <a href="tel:0539653809" class="p-4 bg-slate-50 rounded-2xl font-black text-blue-600 hover:bg-blue-50 transition-all border">📞 שיחה</a>
-                <a href="https://wa.me/972539653809" class="p-4 bg-slate-50 rounded-2xl font-black text-green-600 hover:bg-green-50 transition-all border">💬 וואטסאפ</a>
+                <a href="tel:0539653809" class="p-4 bg-slate-50 rounded-2xl font-black text-blue-600 border">📞 שיחה</a>
+                <a href="https://wa.me/972539653809" class="p-4 bg-slate-50 rounded-2xl font-black text-green-600 border">💬 וואטסאפ</a>
             </div>
         </div>
     </main>
-
-    <script src="config.js"></script>
     <script>
-        const profile = JSON.parse(localStorage.getItem('user_profile') || '{"name":"מוקדן"}');
-        document.getElementById('userName').innerText = profile.name;
-        document.getElementById('userInitial').innerText = profile.name.charAt(0);
-
-        async function load() {
-            try {
-                const r = await fetch(CONFIG.SCRIPT_URL);
-                const db = await r.json();
-                const my = db.filter(s => s.שם_מוקדן === profile.name);
-                
-                document.getElementById('statTotal').innerText = my.length;
-                document.getElementById('statMorn').innerText = my.filter(s => s.סוג_משמרת.includes('morn')).length;
-                document.getElementById('statEve').innerText = my.filter(s => s.סוג_משמרת.includes('eve')).length;
-                document.getElementById('statNight').innerText = my.filter(s => s.סוג_משמרת.includes('night')).length;
-
-                const counts = db.reduce((acc, s) => { acc[s.שם_מוקדן] = (acc[s.שם_מוקדן] || 0) + 1; return acc; }, {});
-                const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-                const rank = sorted.findIndex(x => x[0] === profile.name) + 1;
-                document.getElementById('userRank').innerText = rank > 0 ? `#${rank}` : '-';
-            } catch(e) {}
-        }
-        load();
+        const p = JSON.parse(localStorage.getItem('user_profile') || '{"name":"מוקדן"}');
+        document.getElementById('name').innerText = p.name;
+        document.getElementById('initial').innerText = p.name.charAt(0);
     </script>
 </body>
 </html>
