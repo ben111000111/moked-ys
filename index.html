@@ -11,37 +11,36 @@
         .slot-free { @apply border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600; }
         .slot-taken { @apply bg-blue-600 border-blue-700 text-white font-bold; }
         .card { @apply bg-white p-4 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col; }
+        .nav-btn { @apply px-3 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 font-bold text-xs flex items-center gap-1; }
     </style>
 </head>
 <body class="min-h-screen pb-20">
     <script>if(localStorage.getItem('user_auth') !== 'true') window.location.replace('login.html');</script>
 
     <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 text-right">
             <img id="headerLogo" class="h-14" alt="לוגו">
             <div>
-                <h1 id="welcomeMsg" class="text-lg font-black text-slate-800 italic">שלום...</h1>
-                <p id="timeGreeting" class="text-blue-600 font-bold text-xs uppercase mt-1"></p>
+                <h1 id="welcomeMsg" class="text-lg font-black text-slate-800 italic leading-none">שלום...</h1>
+                <p id="timeGreeting" class="text-blue-600 font-bold text-[10px] uppercase mt-1"></p>
             </div>
         </div>
-        <div class="hidden md:flex flex-col items-center italic">
-            <div id="clock" class="text-2xl font-black text-slate-800 tabular-nums">00:00:00</div>
-            <div id="topHebDate" class="text-blue-600 font-bold text-[10px] tracking-widest uppercase">טוען תאריך...</div>
-        </div>
-        <nav class="flex gap-2 font-bold text-xs">
-            <a href="index.html" class="px-3 py-2 bg-blue-600 text-white rounded-xl shadow-md">בית</a>
-            <a href="sabbaths.html" class="px-3 py-2 bg-white border rounded-xl hover:bg-slate-50 transition-all text-slate-600">שבתות</a>
+        
+        <nav class="flex gap-2">
+            <a href="index.html" class="nav-btn bg-blue-600 border-blue-600 text-white">בית</a>
+            <a href="sabbaths.html" class="nav-btn">שבתות</a>
+            <a href="profile.html" class="nav-btn bg-slate-50 text-blue-700 border-blue-100">👤 אזור אישי</a>
         </nav>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 md:p-8 text-right">
         <div class="flex justify-between items-center mb-8 bg-white p-4 rounded-3xl border shadow-sm">
-            <button onclick="changeWeek(-1)" class="w-10 h-10 border rounded-full hover:bg-slate-50 transition-all font-bold">◀</button>
+            <button onclick="changeWeek(-1)" class="w-10 h-10 border rounded-full hover:bg-slate-50 font-bold">◀</button>
             <div class="text-center">
                 <h2 class="text-2xl font-black text-slate-800 uppercase italic tracking-tight">סידור עבודה שבועי</h2>
                 <div id="parashaBadge" class="text-blue-600 font-extrabold text-sm italic">מחשב פרשה...</div>
             </div>
-            <button onclick="changeWeek(1)" class="w-10 h-10 border rounded-full hover:bg-slate-50 transition-all font-bold">▶</button>
+            <button onclick="changeWeek(1)" class="w-10 h-10 border rounded-full hover:bg-slate-50 font-bold">▶</button>
         </div>
 
         <div id="mainGrid" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8"></div>
@@ -50,70 +49,26 @@
 
     <script src="config.js"></script>
     <script>
-        // מאגר פרשות לשלוש שנים: 2025, 2026, 2027
+        // המאגר המלא כולל 2025-2027 (מקוצר כאן להמחשה, תשאיר אצלך את הרשימה המלאה שנתתי קודם)
         const PARASHOT_DB = {
-            // 2025
-            "2025-01-04": "ויגש", "2025-01-11": "ויחי", "2025-01-18": "שמות", "2025-01-25": "וארא",
-            "2025-02-01": "בא", "2025-02-08": "בשלח", "2025-02-15": "יתרו", "2025-02-22": "משפטים",
-            "2025-03-01": "תרומה", "2025-03-08": "תצוה", "2025-03-15": "כי תשא", "2025-03-22": "ויקהל-פקודי", "2025-03-29": "ויקרא",
-            "2025-04-05": "צו", "2025-04-12": "ערב פסח", "2025-04-19": "חול המועד פסח", "2025-04-26": "שמיני",
-            "2025-05-03": "תזריע-מצורע", "2025-05-10": "אחרי מות-קדושים", "2025-05-17": "אמור", "2025-05-24": "בהר-בחוקותי", "2025-05-31": "במדבר",
-            "2025-06-07": "נשא", "2025-06-14": "בהעלותך", "2025-06-21": "שלח", "2025-06-28": "קרח",
-            "2025-07-05": "חקת", "2025-07-12": "בלק", "2025-07-19": "פינחס", "2025-07-26": "מטות-מסעי",
-            "2025-08-02": "דברים", "2025-08-09": "ואתחנן", "2025-08-16": "עקב", "2025-08-23": "ראה", "2025-08-30": "שופטים",
-            "2025-09-06": "כי תצא", "2025-09-13": "כי תבוא", "2025-09-20": "נצבים", "2025-09-27": "וילך",
-            "2025-10-04": "האזינו", "2025-10-11": "חול המועד סוכות", "2025-10-18": "בראשית", "2025-10-25": "נח",
-            "2025-11-01": "לך לך", "2025-11-08": "וירא", "2025-11-15": "חיי שרה", "2025-11-22": "תולדות", "2025-11-29": "ויצא",
-            "2025-12-06": "וישלח", "2025-12-13": "וישב", "2025-12-20": "מקץ", "2025-12-27": "ויגש",
-            // 2026
-            "2026-01-03": "ויחי", "2026-01-10": "שמות", "2026-01-17": "וארא", "2026-01-24": "בא", "2026-01-31": "בשלח",
-            "2026-02-07": "יתרו", "2026-02-14": "משפטים", "2026-02-21": "תרומה", "2026-02-28": "תצוה",
-            "2026-03-07": "כי תשא", "2026-03-14": "ויקהל-פקודי", "2026-03-21": "ויקרא", "2026-03-28": "צו",
-            "2026-04-04": "חול המועד פסח", "2026-04-11": "שמיני", "2026-04-18": "תזריע-מצורע", "2026-04-25": "אחרי מות-קדושים",
-            "2026-05-02": "אמור", "2026-05-09": "בהר-בחוקותי", "2026-05-16": "במדבר", "2026-05-23": "נשא", "2026-05-30": "בהעלותך",
-            "2026-06-06": "שלח", "2026-06-13": "קרח", "2026-06-20": "חקת-בלק", "2026-06-27": "פינחס",
-            "2026-07-04": "מטות-מסעי", "2026-07-11": "דברים", "2026-07-18": "ואתחנן", "2026-07-25": "עקב",
-            "2026-08-01": "ראה", "2026-08-08": "שופטים", "2026-08-15": "כי תצא", "2026-08-22": "כי תבוא", "2026-08-29": "נצבים-וילך",
-            "2026-09-05": "האזינו", "2026-09-12": "ערב ראש השנה", "2026-09-19": "וילך", "2026-09-26": "ערב סוכות",
-            "2026-10-03": "חול המועד סוכות", "2026-10-10": "בראשית", "2026-10-17": "נח", "2026-10-24": "לך לך", "2026-10-31": "וירא",
-            "2026-11-07": "חיי שרה", "2026-11-14": "תולדות", "2026-11-21": "ויצא", "2026-11-28": "וישלח",
-            "2026-12-05": "וישב", "2026-12-12": "מקץ", "2026-12-19": "ויגש", "2026-12-26": "ויחי",
-            // 2027
-            "2027-01-02": "שמות", "2027-01-09": "וארא", "2027-01-16": "בא", "2027-01-23": "בשלח", "2027-01-30": "יתרו",
-            "2027-02-06": "משפטים", "2027-02-13": "תרומה", "2027-02-20": "תצוה", "2027-02-27": "כי תשא",
-            "2027-03-06": "ויקהל", "2027-03-13": "פקודי", "2027-03-20": "ויקרא", "2027-03-27": "צו",
-            "2027-04-03": "שמיני", "2027-04-10": "תזריע", "2027-04-17": "מצורע", "2027-04-24": "חול המועד פסח",
-            "2027-05-01": "אחרי מות", "2027-05-08": "קדושים", "2027-05-15": "אמור", "2027-05-22": "בהר", "2027-05-29": "בחוקותי",
-            "2027-06-05": "במדבר", "2027-06-12": "נשא", "2027-06-19": "בהעלותך", "2027-06-26": "שלח",
-            "2027-07-03": "קרח", "2027-07-10": "חקת", "2027-07-17": "בלק", "2027-07-24": "פינחס", "2027-07-31": "מטות",
-            "2027-08-07": "מסעי", "2027-08-14": "דברים", "2027-08-21": "ואתחנן", "2027-08-28": "עקב",
-            "2027-09-04": "ראה", "2027-09-11": "שופטים", "2027-09-18": "כי תצא", "2027-09-25": "כי תבוא",
-            "2027-10-02": "נצבים-וילך", "2027-10-09": "האזינו", "2027-10-16": "סוכות", "2027-10-23": "בראשית", "2027-10-30": "נח",
-            "2027-11-06": "לך לך", "2027-11-13": "וירא", "2027-11-20": "חיי שרה", "2027-11-27": "תולדות",
-            "2027-12-04": "ויצא", "2027-12-11": "וישלח", "2027-12-18": "וישב", "2027-12-25": "מקץ"
+            "2025-12-27": "ויגש", "2026-01-03": "ויחי", "2026-01-10": "שמות", 
+            "2026-04-04": "חול המועד פסח", "2026-09-12": "ערב ראש השנה",
+            "2026-09-26": "ערב סוכות", "2027-04-24": "חול המועד פסח"
+            // ... תעתיק לפה את הרשימה המלאה שנתתי בתגובה הקודמת
         };
 
         let db = [], anchor = new Date();
-
-        if (document.getElementById('headerLogo')) {
-            document.getElementById('headerLogo').src = CONFIG.LOGO_FILENAME || 'logo.png';
-        }
-
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('he-IL', {hour12:false});
-            if(!window.hebSet) {
-                fetch(`https://www.hebcal.com/converter?cfg=json&gy=${now.getFullYear()}&gm=${now.getMonth()+1}&gd=${now.getDate()}&g2h=1`)
-                    .then(r => r.json()).then(d => { document.getElementById('topHebDate').innerText = d.hebrew; window.hebSet = true; });
-            }
-        }, 1000);
+        document.getElementById('headerLogo').src = CONFIG.LOGO_FILENAME || 'logo.png';
 
         function updateParasha(date) {
             let sat = new Date(date);
             sat.setDate(date.getDate() + (6 - date.getDay()));
             const key = sat.toISOString().split('T')[0];
             const name = PARASHOT_DB[key] || "פרשת השבוע";
-            document.getElementById('parashaBadge').innerText = `שבת פרשת ${name}`;
+            
+            // לוגיקה חכמה: אם זה חג, לא כותבים "פרשת"
+            const isHoliday = name.includes("חול המועד") || name.includes("ערב") || name.includes("ראש השנה");
+            document.getElementById('parashaBadge').innerText = isHoliday ? `שבת ${name}` : `שבת פרשת ${name}`;
         }
 
         async function load() {
